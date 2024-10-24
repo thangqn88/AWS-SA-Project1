@@ -1,0 +1,29 @@
+For developing DR plan, there are two key metrics that we must be considerd
+- Recovery time objective (RTO) => how many hours it takes you to return to a working state after a disaster.
+- Recovery point objective (RPO) => how many hours you could lose the data when a disaster happens.
+
+1. Minimum RTO for a single AZ outage
+For this scenario, the minimum RTO is typically 60–120 seconds. Ref url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.Failover.html
+
+2. Minimum RTO for a single region outage
+In this scenario, the timing requires below steps:
+- Starting up a new Amazon RDS instance
+- Applying all changes since the last backup. 30 mins to 1 hour.
+- Manual intervention.
+    -- Use existing replica and promote to master. ~10mins
+    -- Verify newly promoted database is working correctly. ~ 2mins (Time to recover DB ~15mins)
+    -- Verify application can connect to database ~2mins
+    -- Reconfigure the application to point to new DB instance. ~ 30mins
+    -- Checks to ensure application is working correctly ~5mins
+
+Estimated min RTO for single-region outage: ~60mins
+
+3. Minimum RPO for a single AZ outage
+- In Multi-AZ scenario, automatic backups are enabled. It means AWS will take full snapshot once a day.
+- Assuming web-server continued to serve requests for 60-120sec until database failover completed
+=> Minimum RPO for a single AZ is 5 minutes.
+
+4. Minimum RPO for a single region outage
+- In Multi-AZ, Multi-region mode, database is updated asynchronously between Primary and read replica.
+- it takes minimum 15-20 minutes for system to get into Available state (for initial setup and installation time). 
+=> Minimum RPO for single region outage is around 15 minutes.
